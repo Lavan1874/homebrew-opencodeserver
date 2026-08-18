@@ -8,7 +8,7 @@ cask "opencodeserver" do
   homepage "https://github.com/Lavan1874/OpenCodeServer"
 
   depends_on arch: :arm64
-  depends_on macos: ">= :tahoe"
+  depends_on macos: :tahoe
 
   app "OpenCodeServer.app"
   binary "#{appdir}/OpenCodeServer.app/Contents/MacOS/opencodeserverctl"
