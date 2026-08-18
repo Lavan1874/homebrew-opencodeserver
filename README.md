@@ -17,7 +17,11 @@ OpenCode running. Not affiliated with the OpenCode project (opencode.ai).
 The app is signed with an Apple Development certificate and is **not
 notarized**. Homebrew quarantines cask downloads, so after each install and
 each `brew upgrade --cask` the first open is blocked; approve it once via
-System Settings → Privacy & Security → "Open Anyway". A quarantine-free
-install path (curl + ditto) is documented in the project README.
+System Settings → Privacy & Security → "Open Anyway". A quarantine-free, one-line alternative:
+
+    curl -fsSL https://raw.githubusercontent.com/Lavan1874/OpenCodeServer/main/scripts/install-app.sh | bash
+
+(It downloads the latest release, verifies the published SHA-256 digest and the
+code signature, and installs without any Gatekeeper prompt.)
 
 Requires macOS 26 on Apple Silicon.
