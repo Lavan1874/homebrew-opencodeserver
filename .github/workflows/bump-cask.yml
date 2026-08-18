@@ -1,0 +1,63 @@
+name: Bump cask on new release
+
+# Triggered by a repository_dispatch of type "release-published", sent by
+# the maintainer's release script when a new OpenCodeServer release is
+# published (see scripts/cut-release.sh in Lavan1874/OpenCodeServer).
+# workflow_dispatch allows a manual re-run.
+
+on:
+  repository_dispatch:
+    types: [release-published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve latest release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="$(curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" \
+            https://api.github.com/repos/Lavan1874/OpenCodeServer/releases/latest \
+            | jq -r .tag_name)"
+          case "$tag" in
+            v[0-9]*) version="${tag#v}" ;;
+            *) echo "unexpected tag: $tag" >&2; exit 1 ;;
+          esac
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+
+      - name: Download and digest the release zip
+        id: digest
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          curl -fsSL -o app.zip \
+            "https://github.com/Lavan1874/OpenCodeServer/releases/download/v${VERSION}/OpenCodeServer-${VERSION}.zip"
+          sha="$(sha256sum app.zip | cut -d' ' -f1)"
+          echo "sha256=$sha" >>"$GITHUB_OUTPUT"
+
+      - name: Update and commit the cask
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          SHA256: ${{ steps.digest.outputs.sha256 }}
+        run: |
+          cask=Casks/opencodeserver.rb
+          if grep -q "version \"${VERSION}\"" "$cask"; then
+            echo "cask already at ${VERSION}; nothing to do"
+            exit 0
+          fi
+          sed -i "s|^  version \".*\"|  version \"${VERSION}\"|" "$cask"
+          sed -i "s|^  sha256 \".*\"|  sha256 \"${SHA256}\"|" "$cask"
+          sed -i "s|^  url \".*\"|  url \"https://github.com/Lavan1874/OpenCodeServer/releases/download/v${VERSION}/OpenCodeServer-${VERSION}.zip\"|" "$cask"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$cask"
+          git commit -m "Bump cask to ${VERSION}"
+          git push
