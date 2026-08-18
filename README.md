@@ -7,7 +7,10 @@ OpenCode running. Not affiliated with the OpenCode project (opencode.ai).
 ## Install
 
     brew tap lavan1874/opencodeserver
+    brew trust lavan1874/opencodeserver
     brew install --cask opencodeserver
+
+`brew trust` is a one-time opt-in current Homebrew requires before loading packages from a third-party tap.
 
 ## Gatekeeper note
 
